@@ -1,6 +1,8 @@
 import { app } from "../../../scripts/app.js";
 import { ComfyWidgets } from "../../../scripts/widgets.js";
 
+const copyButtonId = "pysssss.CopyButton"
+
 // Displays input text on a node
 app.registerExtension({
 	name: "pysssss.ShowText",
@@ -18,11 +20,18 @@ app.registerExtension({
 				if (!v[0]) {
 					v.shift();
 				}
+				if (v[1] === copyButtonId && v.length === 2)
+					v.pop();
+
 				for (const list of v) {
 					const w = ComfyWidgets["STRING"](this, "text2", ["STRING", { multiline: true }], app).widget;
 					w.inputEl.readOnly = true;
 					w.inputEl.style.opacity = 0.6;
 					w.value = list;
+
+					if (v.length === 1) {
+						addCopyButton(this, w);
+					}
 				}
 
 				requestAnimationFrame(() => {
@@ -36,6 +45,15 @@ app.registerExtension({
 					this.onResize?.(sz);
 					app.graph.setDirtyCanvas(true, false);
 				});
+			}
+
+			function addCopyButton(widget, w) {
+				const originalSize = [widget.size[0], widget.size[1]];
+				widget.addWidget("button", "Copy", copyButtonId, () => {
+					navigator.clipboard.writeText(w.value);
+				}, { serialize: false });
+				widget.size[0] = originalSize[0];
+				widget.size[1] = originalSize[1];
 			}
 
 			// When the node is executed we will be sent the input text, display this in the widget
